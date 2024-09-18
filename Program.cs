@@ -50,6 +50,26 @@ public class RedisEncryptionBenchmark
         await _redisConnectionMultiplexerService.GetKeyValueAsync<string>("benchmark-noencryption", useEncryption: false);
     }
 
+    [Benchmark]
+    public async Task TestRedisEncryptionFor10000Keys()
+    {
+        for (int i = 0; i < 10000; i++)
+        {
+            await _redisConnectionMultiplexerService.SetKeyValueAsync("benchmark-AES", $"benchmark{i}", useEncryption: true);
+            await _redisConnectionMultiplexerService.GetKeyValueAsync<string>($"benchmark{i}", useEncryption: true);
+        }
+    }
+
+    [Benchmark]
+    public async Task TestRedisWithoutEncryptionFor10000Keys()
+    {
+        for (int i = 0; i < 10000; i++)
+        {
+            await _redisConnectionMultiplexerService.SetKeyValueAsync("benchmark-AES", $"benchmark{i}", useEncryption: false);
+            await _redisConnectionMultiplexerService.GetKeyValueAsync<string>($"benchmark{i}", useEncryption: false);
+        }
+    }
+
     // cleanup code
     [GlobalCleanup]
     public void Cleanup()
