@@ -20,6 +20,12 @@ internal class Program
 [MemoryDiagnoser]
 public class RedisEncryptionBenchmark
 {
+    private const string AESPrefix = "AES";
+    private const string NoEncryptionPrefix = "NO-";
+    private const string Key = "userCloudId_c582fb1e-a171-4994-b7e2-fbefc25fc95c_tenantId_c582fb1e-a171-4994-b7e2-fbefc25fc95c_orgId_c582fb1e-a171-4994-b7e2-fbefc25fc95c_cloudIdUserInfo";
+    private string AESKeyWithPrefix => $"{AESPrefix}{Key}";
+    private string NoEncryptionKeyWithPrefix => $"{NoEncryptionPrefix}{Key}";
+    private const string Value = "{\"UserId\":\"123e4567-e89b-12d3-a456-426614174000\",\"Email\":\"john.doe@example.com\",\"FullName\":\"John Doe\",\"IsDeveloper\":true,\"IsBlockedOrExpired\":false,\"TenantId\":\"123e4567-e89b-12d3-a456-426614174001\",\"OrganizationId\":\"123e4567-e89b-12d3-a456-426614174002\",\"LegislationCode\":\"US\",\"TimeZoneId\":\"America/New_York\",\"InitialOrganizationId\":\"123e4567-e89b-12d3-a456-426614174003\",\"FeatureCodes\":[\"FeatureA\",\"FeatureB\"],\"BusinessId\":\"123e4567-e89b-12d3-a456-426614174004\"}";
     RedisConnectionMultiplexerService _redisConnectionMultiplexerService;
 
     [GlobalSetup]
@@ -39,34 +45,35 @@ public class RedisEncryptionBenchmark
     [Benchmark]
     public async Task TestRedisEncryption()
     {
-        await _redisConnectionMultiplexerService.SetKeyValueAsync("benchmark-AES", "benchmark", useEncryption: true);
-        await _redisConnectionMultiplexerService.GetKeyValueAsync<string>("benchmark-AES", useEncryption: true);
+        await _redisConnectionMultiplexerService.SetKeyValueAsync(AESKeyWithPrefix, Value, useEncryption: true);
+        await _redisConnectionMultiplexerService.GetKeyValueAsync<string>(AESKeyWithPrefix, useEncryption: true);
     }
 
     [Benchmark]
     public async Task TestRedisWithoutEncryption()
     {
-        await _redisConnectionMultiplexerService.SetKeyValueAsync("benchmark-noencryption", "benchmark", useEncryption: false);
-        await _redisConnectionMultiplexerService.GetKeyValueAsync<string>("benchmark-noencryption", useEncryption: false);
+        var keyWithPrefix = $"{NoEncryptionPrefix}{Key}";
+        await _redisConnectionMultiplexerService.SetKeyValueAsync(NoEncryptionKeyWithPrefix, Value, useEncryption: false);
+        await _redisConnectionMultiplexerService.GetKeyValueAsync<string>(NoEncryptionKeyWithPrefix, useEncryption: false);
     }
 
     [Benchmark]
-    public async Task TestRedisEncryptionFor10000Keys()
+    public async Task TestRedisEncryptionFor1000Keys()
     {
-        for (int i = 0; i < 10000; i++)
+        for (int i = 0; i < 1000; i++)
         {
-            await _redisConnectionMultiplexerService.SetKeyValueAsync("benchmark-AES", $"benchmark{i}", useEncryption: true);
-            await _redisConnectionMultiplexerService.GetKeyValueAsync<string>($"benchmark{i}", useEncryption: true);
+            await _redisConnectionMultiplexerService.SetKeyValueAsync($"{AESKeyWithPrefix}{i}", Value, useEncryption: true);
+            await _redisConnectionMultiplexerService.GetKeyValueAsync<string>($"{AESKeyWithPrefix}{i}", useEncryption: true);
         }
     }
 
     [Benchmark]
-    public async Task TestRedisWithoutEncryptionFor10000Keys()
+    public async Task TestRedisWithoutEncryptionFor1000Keys()
     {
-        for (int i = 0; i < 10000; i++)
+        for (int i = 0; i < 1000; i++)
         {
-            await _redisConnectionMultiplexerService.SetKeyValueAsync("benchmark-AES", $"benchmark{i}", useEncryption: false);
-            await _redisConnectionMultiplexerService.GetKeyValueAsync<string>($"benchmark{i}", useEncryption: false);
+            await _redisConnectionMultiplexerService.SetKeyValueAsync($"{NoEncryptionKeyWithPrefix}{i}", Value, useEncryption: false);
+            await _redisConnectionMultiplexerService.GetKeyValueAsync<string>($"{NoEncryptionKeyWithPrefix}{i}", useEncryption: false);
         }
     }
 
